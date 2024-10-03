@@ -9,8 +9,6 @@ from routers.test_router import router as test_router
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",  # Разрешить доступ с этого домена
-    "https://example.com",     # Добавьте другие домены по мере необходимости
     "*",                        # Разрешить доступ с любых доменов (не рекомендуется в продакшене)
 ]
 
