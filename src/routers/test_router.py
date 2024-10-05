@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from schemas.words import WordCreate
+from schemas.admin_wac import WordCreate
 from typing import List
 from sqlalchemy.orm import Session
 from models import Word

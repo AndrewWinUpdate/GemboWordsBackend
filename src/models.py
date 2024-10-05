@@ -23,11 +23,11 @@ user_category_association = Table(
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True)
 )
 
-word_example_association = Table(
-    'word_example_association', Base.metadata,
-    Column('word_id', Integer, ForeignKey('words.id'), primary_key=True),
-    Column('example_id', Integer, ForeignKey('examples.id'), primary_key=True)
-)
+# word_example_association = Table(
+#     'word_example_association', Base.metadata,
+#     Column('word_id', Integer, ForeignKey('words.id'), primary_key=True),
+#     Column('example_id', Integer, ForeignKey('examples.id'), primary_key=True)
+# )
 
 
 
@@ -41,7 +41,7 @@ class Word(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     categories = relationship('Category', secondary=word_category_association, back_populates='words')
-    examples = relationship('Example', secondary=word_example_association, back_populates='words')
+    # examples = relationship('Example', secondary=word_example_association, back_populates='words')
     
     
 
@@ -66,10 +66,12 @@ class Stats(Base):
 class Example(Base):
     __tablename__ = "examples"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    text = Column(String, nullable=False)
+    english = Column(String, nullable=False)
+    russian = Column(String, nullable=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
-    words = relationship('Word', secondary=word_example_association, back_populates='examples')
+    # words = relationship('Word', secondary=word_example_association, back_populates='examples')
+    word_id = Column(Integer, ForeignKey("words.id"))
 
 class Category(Base):
     __tablename__ = "categories"
