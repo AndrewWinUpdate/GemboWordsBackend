@@ -41,6 +41,7 @@ class Word(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     categories = relationship('Category', secondary=word_category_association, back_populates='words')
+    examples = relationship("Example", back_populates="word")
     # examples = relationship('Example', secondary=word_example_association, back_populates='words')
     
     
@@ -72,6 +73,7 @@ class Example(Base):
     
     # words = relationship('Word', secondary=word_example_association, back_populates='examples')
     word_id = Column(Integer, ForeignKey("words.id"))
+    word = relationship("Word", back_populates="examples")
 
 class Category(Base):
     __tablename__ = "categories"
