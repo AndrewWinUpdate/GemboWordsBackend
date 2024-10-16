@@ -12,7 +12,7 @@ class WordReadWithoutCategories(BaseModel):
     russian: str
     english: str
     transcription: Optional[str]
-    examples = Optional[List[Example]]
+    examples: Optional[List[Example]]
     
     
 class CategoryReadWithoutWords(BaseModel):

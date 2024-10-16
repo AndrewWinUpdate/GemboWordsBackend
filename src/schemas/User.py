@@ -33,3 +33,7 @@ class UserRead(BaseModel):
     email: EmailStr
     creation_date: datetime
     is_admin: bool
+    
+    
+class UnauthorizedError(BaseModel):
+    msg: str

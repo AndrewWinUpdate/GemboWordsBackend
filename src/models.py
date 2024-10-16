@@ -54,6 +54,8 @@ class User(Base):
     creation_date = Column(DateTime, server_default=func.now(), nullable=False)
     is_admin = Column(Boolean, default=False)
     
+    dayly_goal = Column(Integer, default=0)
+    
     categories = relationship('Category', secondary=user_category_association, back_populates='users')
 
 class Stats(Base):
