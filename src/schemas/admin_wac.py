@@ -1,18 +1,23 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-class Example(BaseModel):
+class ExampleRead(BaseModel):
     id: int
     english: str
     russian: str
-    owner_id: Optional[int]
+    owner_id: Optional[int] = None
+    
+class ExampleCreate(BaseModel):
+    english: str
+    russian: str
+    owner_id: Optional[int] = None
 
 class WordReadWithoutCategories(BaseModel):
     id: int
     russian: str
     english: str
-    transcription: Optional[str]
-    examples: Optional[List[Example]]
+    transcription: Optional[str] = ""
+    examples: Optional[List[ExampleRead]] = []
     
     
 class CategoryReadWithoutWords(BaseModel):
@@ -20,6 +25,11 @@ class CategoryReadWithoutWords(BaseModel):
     name: str
     picture: Optional[str]
     owner_id: Optional[int]
+    sort_order: int
+    
+class CategoryCreate(BaseModel):
+    name: str
+    filename: Optional[str] = None
 
 class CategoryReadWithWords(CategoryReadWithoutWords):
     words: Optional[List[WordReadWithoutCategories]]
@@ -38,7 +48,9 @@ class WordCreate(BaseModel):
     russian: str
     english: str
     transcription: Optional[str]
-    categories: List[int]
+    categories: Optional[List[int]] = None
+    
+    examples: Optional[List[ExampleCreate]] = None
     
     
 class WordUpdate(BaseModel):
@@ -49,5 +61,5 @@ class WordUpdate(BaseModel):
 
 
 class WordReadWithCategories(WordReadWithoutCategories):
-    categories: Optional[List[CategoryReadWithoutWords]]
+    categories: Optional[List[CategoryReadWithoutWords]] = []
     

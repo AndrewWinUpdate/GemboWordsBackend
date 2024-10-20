@@ -31,14 +31,13 @@ user_category_association = Table(
 
 
 
-
 class Word(Base):
     __tablename__ = "words"
     id = Column(Integer, primary_key=True, autoincrement=True)
     english = Column(String, nullable=False)
     russian = Column(String, nullable=False)
     transcription = Column(String, nullable=True)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=True)
     
     categories = relationship('Category', secondary=word_category_association, back_populates='words')
     examples = relationship("Example", back_populates="word")
@@ -60,7 +59,7 @@ class User(Base):
 
 class Stats(Base):
     __tablename__ = "stats"
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False, primary_key=True)
     learned_words = Column(Integer, nullable=False)
     learning_words = Column(Integer, nullable=False)
     known_words = Column(Integer, nullable=False)
@@ -71,21 +70,37 @@ class Example(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     english = Column(String, nullable=False)
     russian = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=True)
     
     # words = relationship('Word', secondary=word_example_association, back_populates='examples')
-    word_id = Column(Integer, ForeignKey("words.id"))
+    word_id = Column(Integer, ForeignKey("words.id", ondelete='CASCADE'))
     word = relationship("Word", back_populates="examples")
+    
+    
+    def __str__(self):
+        return self.english
+    
+    def __repr__(self):
+        return self.english
 
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     picture = Column(String, nullable=True)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=True)
+    
+    sort_order = Column(Integer, default=0)
     
     words = relationship('Word', secondary=word_category_association, back_populates='categories')
     users = relationship('User', secondary=user_category_association, back_populates='categories')
+    
+    
+    def __str__(self):
+        return f"{self.id} - {self.name} - {self.picture} - {self.owner_id}"
+    
+    def __repr___(self):
+        return f"{self.id} - {self.name}"
 
 class Relation_user_word(Base):
     __tablename__ = "user_word_relations"

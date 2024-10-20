@@ -7,6 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.test_router import router as test_router
 from routers.admin import router as admin_router
 from routers.user import router as user_router
+import models
+from database import engine
+
+
+from sqladmin import Admin, ModelView
 
 app = FastAPI()
 
@@ -36,6 +41,29 @@ api_router.include_router(user_router)
 
 
 app.include_router(api_router)
+
+
+
+test_mode = 1
+if test_mode:
+    class UserAdmin(ModelView, model=models.User):
+        column_list = [models.User.id, models.User.email]
+        
+    class CategoryAdmin(ModelView, model=models.Category):
+        column_list = [models.Category.id, models.Category.name, models.Category.owner_id, models.Category.words]
+        
+    class WordAdmin(ModelView, model=models.Word):
+        column_list = [models.Word.id, models.Word.english, models.Word.russian, models.Word.owner_id, models.Word.examples]
+        
+    class ExampleAdmin(ModelView, model=models.Example):
+        column_list = [models.Example.id, models.Example.english, models.Example.russian, models.Example.word_id, models.Example.owner_id]
+
+    admin = Admin(app, engine)
+    admin.add_view(UserAdmin)
+    admin.add_view(CategoryAdmin)
+    admin.add_view(WordAdmin)
+    admin.add_view(ExampleAdmin)
+
 
 
 

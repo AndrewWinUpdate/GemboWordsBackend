@@ -8,7 +8,7 @@ from fastapi import Depends, Request, Response, HTTPException
 from database import get_async_session
 from sqlalchemy import select
 import bcrypt
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TOKEN_NAME
 
@@ -164,3 +164,20 @@ class AuthManager():
             result = await session.execute(query)
             user = result.scalar()
             return user
+        
+        
+
+async def get_current_user(request: Request, session: AsyncSession = Depends(get_async_session)):
+    token = request.cookies.get("jwt")
+    
+    user = await AuthManager.whoami(token, session)
+    if isinstance(user, User):
+        return user
+    else:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+async def get_admin(user=Depends(get_current_user)):
+    if (user.is_admin):
+        return user
+    else:
+        raise HTTPException(403, "Forbidden")
