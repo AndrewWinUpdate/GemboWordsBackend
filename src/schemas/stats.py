@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 
-class Stats(BaseModel):
+class StatsRead(BaseModel):
     learned_words: int
     learning_words: int
     known_words: int

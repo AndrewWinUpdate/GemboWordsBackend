@@ -1,6 +1,6 @@
 import jwt
 from random import randint
-from models import User
+from models import User, Category, Stats
 from schemas.User import RegisterInput, LoginInput, UserRead, UnauthorizedError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
@@ -9,6 +9,7 @@ from database import get_async_session
 from sqlalchemy import select
 import bcrypt
 from fastapi import HTTPException, Request
+from sqlalchemy.orm import joinedload
 
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TOKEN_NAME
 
@@ -79,15 +80,29 @@ class AuthManager():
         if exists:
             print("exists")
             return HTTPException(status_code=409, detail="User with such email is already registered")
-        new_user = User(email=user.email, 
-                        hashed_password=AuthManager.hash_password(user.password),
-                        
-                        )
+        new_user = User(email=user.email, hashed_password=AuthManager.hash_password(user.password))
+        
         
         session.add(new_user)
         await session.commit()
         
+        user_id = new_user.id
+    
+    # Создание записи статистики для нового пользователя
+        new_stats = Stats(
+            user_id=user_id,  # Связываем статистику с новым пользователем
+            learned_words=0,
+            learning_words=0,
+            known_words=0,
+            problematic_words=0
+        )
+        session.add(new_stats)
+        
+        # Сохранение статистики в базе данных
+        await session.commit()
+        
         return new_user
+        
     
 
             
@@ -160,7 +175,7 @@ class AuthManager():
         if not email:
             return UnauthorizedError(msg = "Unauthorized")
         else:
-            query = select(User).filter(User.email == email)
+            query = select(User).options(joinedload(User.categories)).filter(User.email == email)
             result = await session.execute(query)
             user = result.scalar()
             return user
@@ -169,6 +184,7 @@ class AuthManager():
 
 async def get_current_user(request: Request, session: AsyncSession = Depends(get_async_session)):
     token = request.cookies.get("jwt")
+    print(f"Token: {token}")
     
     user = await AuthManager.whoami(token, session)
     if isinstance(user, User):

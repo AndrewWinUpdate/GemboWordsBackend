@@ -3,7 +3,7 @@ import schemas.User as user_schemas
 from typing import Union
 from database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from managers.AuthManager import AuthManager
+from managers.AuthManager import AuthManager, get_current_user
 
 
 router = APIRouter(
@@ -32,6 +32,5 @@ async def login(data: user_schemas.LoginInput, session: AsyncSession = Depends(g
     
     
 @router.get("/whoami", response_model = Union[user_schemas.UserRead, user_schemas.UnauthorizedError])
-async def whoami(token: str, session: AsyncSession = Depends(get_async_session)):
-    res = await AuthManager.whoami(token, session)
-    return res
+async def whoami(user = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
+    return user

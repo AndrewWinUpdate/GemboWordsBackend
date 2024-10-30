@@ -3,6 +3,25 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 
+class LearningState:
+    NOT_LEARNING = 0
+    LEARNING = 1
+    LEARNING_PROBLEMATIC = 2
+    LEARNED = 3
+    ALREADY_KNOWN = 4
+    
+    
+    def __str__(self):
+        # Настроенные строки для каждого состояния
+        state_descriptions = {
+            LearningState.NOT_LEARNING: "Not Learning",
+            LearningState.LEARNING: "Learning",
+            LearningState.LEARNING_PROBLEMATIC: "Learning and Problematic",
+            LearningState.LEARNED: "Learned",
+            LearningState.ALREADY_KNOWN: "Already Known"
+        }
+        return state_descriptions.get(self, "Unknown State")
+
 Base = declarative_base()
 
 # class User(Base):
@@ -60,10 +79,10 @@ class User(Base):
 class Stats(Base):
     __tablename__ = "stats"
     user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False, primary_key=True)
-    learned_words = Column(Integer, nullable=False)
-    learning_words = Column(Integer, nullable=False)
-    known_words = Column(Integer, nullable=False)
-    problematic_words = Column(Integer, nullable=False)
+    learned_words = Column(Integer, nullable=False, default=0)
+    learning_words = Column(Integer, nullable=False, default=0)
+    known_words = Column(Integer, nullable=False, default=0)
+    problematic_words = Column(Integer, nullable=False, default=0)
 
 class Example(Base):
     __tablename__ = "examples"
@@ -103,17 +122,30 @@ class Category(Base):
         return f"{self.id} - {self.name}"
 
 class Relation_user_word(Base):
+    """
+    Intervals
+        1h
+        5h
+        1d
+        5d
+        20d
+        2m
+    
+    States
+        0 - not learning
+        1 - learning
+        2 - learning and problematic
+        3 - learned
+        4 - already known
+    """
     __tablename__ = "user_word_relations"
     word_id = Column(Integer, ForeignKey("words.id"), nullable=False, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
-    state = Column(Integer, nullable=False, default=False)
+    state = Column(Integer, nullable=False, default=False, index=True)
     repeat_iteration = Column(Integer, nullable=False, default=0)
-    next_repeat = Column(DateTime, nullable=False)
-
-
-
+    next_repeat = Column(DateTime, nullable=True)
     
-
+    
 
 
 # Создание подключения к базе данных
