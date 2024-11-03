@@ -8,6 +8,7 @@ from routers.test_router import router as test_router
 from routers.admin import router as admin_router
 from routers.user import router as user_router
 from routers.gembow import router as gembow_router
+from routers.stats import router as stats_router
 import models
 from database import engine
 import time
@@ -50,6 +51,7 @@ api_router.include_router(test_router)
 api_router.include_router(admin_router)
 api_router.include_router(user_router)
 api_router.include_router(gembow_router)
+api_router.include_router(stats_router)
 
 
 
@@ -64,7 +66,7 @@ if test_mode:
         column_list = [models.User.id, models.User.email]
         
     class CategoryAdmin(ModelView, model=models.Category):
-        column_list = [models.Category.id, models.Category.name, models.Category.owner_id, models.Category.words]
+        column_list = [models.Category.id, models.Category.name, models.Category.owner_id]
         
     class WordAdmin(ModelView, model=models.Word):
         column_list = [models.Word.id, models.Word.english, models.Word.russian, models.Word.owner_id, models.Word.examples]

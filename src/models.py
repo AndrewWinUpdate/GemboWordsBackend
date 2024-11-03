@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, create_engine, Boolean, DateTime, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, create_engine, Boolean, DateTime, ForeignKey, Table, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
@@ -72,8 +72,6 @@ class User(Base):
     creation_date = Column(DateTime, server_default=func.now(), nullable=False)
     is_admin = Column(Boolean, default=False)
     
-    dayly_goal = Column(Integer, default=0)
-    
     categories = relationship('Category', secondary=user_category_association, back_populates='users')
 
 class Stats(Base):
@@ -83,6 +81,10 @@ class Stats(Base):
     learning_words = Column(Integer, nullable=False, default=0)
     known_words = Column(Integer, nullable=False, default=0)
     problematic_words = Column(Integer, nullable=False, default=0)
+    
+    dayly_goal = Column(Integer, default=5)
+    last_day_learned = Column(Date, nullable=True)
+    last_learn_count = Column(Integer, default=0)
 
 class Example(Base):
     __tablename__ = "examples"
@@ -106,6 +108,7 @@ class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
+    name_translated = Column(String, nullable=True, default=None)
     picture = Column(String, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=True)
     
@@ -132,7 +135,7 @@ class Relation_user_word(Base):
         2m
     
     States
-        0 - not learning
+        0 - not learning (new)
         1 - learning
         2 - learning and problematic
         3 - learned

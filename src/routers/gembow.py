@@ -9,6 +9,7 @@ from sqlalchemy import select, func, or_, and_
 from schemas import admin_wac
 from sqlalchemy.orm import joinedload, aliased
 from managers.LearnManager import LearnManager
+from managers.StatsManager import StatsManager
 from datetime import datetime
 
 
@@ -21,7 +22,7 @@ router = APIRouter(
 @router.get("/get_categories", response_model=List[gembow_schema.CategoryItemRead])
 async def get_categories(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
     global_categories_query = select(
-        Category).filter(Category.owner_id == None)
+        Category).filter(or_(Category.owner_id == None, Category.owner_id==user.id))
     global_categories_query_result = await session.execute(global_categories_query)
     global_categories = global_categories_query_result.scalars().all()
 
@@ -82,6 +83,13 @@ async def unselect_category(category_select: gembow_schema.CategorySelect, user:
 
 @router.get("/get_new_words", response_model=List[admin_wac.WordReadWithCategories])
 async def get_new_words(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
+    
+    stats = await StatsManager.get_stats(user, session)
+        
+    if stats.last_learn_count >=stats.dayly_goal:
+        raise HTTPException(status_code=429, detail=f"You have reached your dayly goal ({stats.last_learn_count}/{stats.dayly_goal})")
+    
+    
     RelationUserWordAlias = aliased(Relation_user_word)
 
     query = (
@@ -112,13 +120,17 @@ async def get_new_words(user: User = Depends(get_current_user), session: AsyncSe
     return words
 
 
-@router.post("/start_learn_word", response_model=gembow_schema.Relation_user_word)
+@router.post("/start_learn_word" , response_model=gembow_schema.Relation_user_word) 
 async def start_learn_word(word_to_learn: gembow_schema.StartLearnWord, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
 
     relation = await LearnManager.start_learning(word_to_learn.id, user, session)
 
+    
+    print(relation, type(relation), isinstance(relation, HTTPException))
+    
     if isinstance(relation, HTTPException):
         raise relation
+    
     return relation
 
 
@@ -207,6 +219,7 @@ async def get_words_with_relations(
     words_with_relations = [
         gembow_schema.CategoryItemGet(
             word=gembow_schema.SimpleWordGet(
+                id=word.id,
                 english=word.english,
                 russian=word.russian
             ),
@@ -222,7 +235,9 @@ async def get_words_with_relations(
     return gembow_schema.CategoryWithWordsAndStats(
         id=category.id,
         name=category.name,
-        words=words_with_relations
+        name_translated=category.name_translated,
+        words=words_with_relations,
+        owner_id=category.owner_id
     )
 
 
@@ -230,3 +245,38 @@ async def get_words_with_relations(
 async def get_earlist_repeat_time(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
     result = await LearnManager.get_earliest_next_repeat(user.id, session)
     return result
+
+
+@router.post("/create_category", response_model=gembow_schema.CategoryReadWithoutWords)
+async def create_category(category: gembow_schema.CategoryCreate, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
+    result = await LearnManager.create_category(category.name, user, session)
+    
+    if isinstance(result, HTTPException):
+        raise HTTPException
+    else:
+        return result
+    
+    
+@router.post("/add_word", response_model=gembow_schema.WordRepeat)
+async def add_word_to_custom_category(word: gembow_schema.WordCreate, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
+    result = await LearnManager.add_word(word, user, session)
+    
+    if isinstance(result, HTTPException):
+        raise result
+    else:
+        return result
+    
+    
+@router.delete("/word")
+async def delete_word(word: gembow_schema.StartLearnWord, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_async_session)):
+    w = await session.get(Word, word.id)
+    if not w:
+        raise HTTPException(status_code=404, detail="Word not found")
+    if w.owner_id != user.id:
+        print(w.owner_id, user.id)
+        raise HTTPException(status_code=403, detail="You cannot delete this word")
+
+    await session.delete(w)
+    await session.commit()
+    
+    return 1
