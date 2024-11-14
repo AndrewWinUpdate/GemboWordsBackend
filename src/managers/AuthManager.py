@@ -58,9 +58,13 @@ class AuthManager():
     @staticmethod
     async def get_by_email(email: str, session: AsyncSession):
         query = select(User).where(User.email == email)
+        
         result = await session.execute(query)
         return result.scalars().first()
         
+        
+        
+    @staticmethod ##########
     def hash_password(password: str) -> str:
         # Генерируем соль
         salt = bcrypt.gensalt()
@@ -68,6 +72,8 @@ class AuthManager():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed_password.decode('utf-8')
     
+    
+    @staticmethod ##########
     def check_password(plain_password: str, hashed_password: str) -> bool:
     # Сравниваем введённый пароль с хешированным
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -102,24 +108,7 @@ class AuthManager():
         await session.commit()
         
         return new_user
-        
-    
-
-            
-        
-    # @staticmethod
-    # def setJWT(user: User, response: Response):
-    #     print(ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY)
-    #     data = {
-    #         "email": user.email
-    #     }
-    #     token = UserManager.create_access_token(data)
-    #     response.set_cookie(TOKEN_NAME, token)
-        
-        
-        
-        
-        
+         
         
     @staticmethod
     def auth_jwt(token: str):
@@ -156,7 +145,7 @@ class AuthManager():
             if pass_checked:
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
                 access_token = AuthManager.create_access_token(
-                    data={"email": data.email},  # subject (sub) обычно содержит уникальный идентификатор пользователя
+                    data={"email": data.email},
                     expires_delta=access_token_expires
                 )
                 
@@ -171,9 +160,9 @@ class AuthManager():
     @staticmethod
     async def whoami(token: str, session: AsyncSession):
         email = AuthManager.auth_jwt(token)
-        print(f"email: {email}")
+        # print(f"email: {email}")
         if not email:
-            return UnauthorizedError(msg = "Unauthorized")
+            return UnauthorizedException()
         else:
             query = select(User).options(joinedload(User.categories)).filter(User.email == email)
             result = await session.execute(query)

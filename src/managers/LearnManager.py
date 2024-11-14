@@ -109,6 +109,7 @@ class LearnManager():
                 if relation.state == LearningState.LEARNING_PROBLEMATIC:
                     stats.problematic_words-=1
                     stats.learning_words+=1
+                    relation.state = LearningState.LEARNING
                 
                 if not next_repeat:
                     relation.state = LearningState.LEARNED

@@ -2,9 +2,7 @@ from typing import Union
 
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
-
-
-from routers.test_router import router as test_router
+from routers.router_test import router as test_router
 from routers.admin import router as admin_router
 from routers.user import router as user_router
 from routers.gembow import router as gembow_router
